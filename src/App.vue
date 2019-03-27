@@ -2,7 +2,7 @@
   <div id="app">
     <img alt="Vue logo" src="./assets/logo.png">
     <HelloWorld msg="Welcome to Your Vue.js App"/>
-    <a @click='handleClick()'>aaaaaa</a>
+    <a @click='handleClick()' class="get-calendar">Get events</a>
   </div>
 </template>
 
@@ -28,9 +28,6 @@ export default {
               gapi.auth2.getAuthInstance().signIn();
             }
           }
-          // gapi.load('client:auth2', () => {
-  
-
           // listUpcomingEvents();
           function listUpcomingEvents() {
             gapi.client.calendar.calendarList.list({
@@ -50,12 +47,12 @@ export default {
               'maxResults': 10,
               'orderBy': 'startTime'
             }).then(function(response) {
-              var events = response.result.items;
+              var roomR = response.result.items;
               // console.log('Upcoming events:');
 
-              if (events.length > 0) {
-                for (var i = 0; i < events.length; i++) {
-                  var event = events[i];
+              if (roomR.length > 0) {
+                for (var i = 0; i < roomR.length; i++) {
+                  var event = roomR[i];
                   var when = event.start.dateTime;
                   if (!when) {
                     when = event.start.date;
@@ -67,7 +64,6 @@ export default {
               }
             });
           }
-          // })
         })
     }
   }
@@ -82,5 +78,9 @@ export default {
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
+}
+a.get-calendar {
+  background-color: blue;
+  cursor: pointer;
 }
 </style>
