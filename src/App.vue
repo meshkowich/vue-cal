@@ -3,19 +3,45 @@
     <img alt="Vue logo" src="./assets/logo.png">
     <HelloWorld msg="Welcome to Your Vue.js App"/>
     <a @click='handleClick()' class="get-calendar">Get events</a>
+    <div class="column">
+      <RoomRight v-for="todo in roomR" :key="todo.id" :todo="todo"/>
+    </div>
   </div>
-</template>
+</template> 
 
 <script>
+
 import HelloWorld from './components/HelloWorld.vue'
+import RoomRight from './components/RoomRight.vue'
+
+let roomR2, nextId = 1;
+
 
 export default {
   name: 'app',
   components: {
-    HelloWorld
+    HelloWorld,
+    RoomRight
+  },
+  data: function() {
+    return {
+      roomR: [
+        {
+          id: nextId++,
+          name: 'aaa',
+          when: 'bbb'
+        },
+        {
+          id: nextId++,
+          name: 'a11',
+          when: 'b222'
+        }
+      ]
+    }
   },
   methods: {
     handleClick () {
+      roomR2 = this.roomR;
       this.$getGapiClient()
         .then(gapi => {
           console.log('yea');
@@ -24,11 +50,33 @@ export default {
           function updateSigninStatus(isSignedIn) {
             if (isSignedIn) {
               listUpcomingEvents();
+              // listFreeBusy();
             } else {
-              gapi.auth2.getAuthInstance().signIn();
+              gapi.auth2.getAuthInstance().signIn(); 
             }
           }
           // listUpcomingEvents();
+          function listFreeBusy() {
+            var today = new Date(),
+              week = new Date();
+            week.setDate(today.getDate()+7);
+            gapi.client.calendar.freebusy.query({
+              timeMin: today.toISOString(),
+              timeMax: week.toISOString(),
+              items:[
+                {
+                  id: 'conversionfactory.com_2d3434303636383733383638@resource.calendar.google.com'
+                }
+              ] 
+            }).then(function(response) {
+              console.log(response);
+              // var list = response.result.items;
+              // for (var i = 0; i < list.length; i++) {
+              //   var a = list[i];
+              //   console.log(a);
+              // }
+            });
+          }
           function listUpcomingEvents() {
             gapi.client.calendar.calendarList.list({
 
@@ -47,17 +95,24 @@ export default {
               'maxResults': 10,
               'orderBy': 'startTime'
             }).then(function(response) {
-              var roomR = response.result.items;
+              var r = response.result.items;
               // console.log('Upcoming events:');
 
-              if (roomR.length > 0) {
-                for (var i = 0; i < roomR.length; i++) {
-                  var event = roomR[i];
+              if (r.length > 0) {
+                for (var i = 0; i < r.length; i++) {
+                  var event = r[i], prevEvent = r[i-1];
+                  if (!prevEvent) {prevEvent = event}; 
+                  var todayEnd = event.end.dateTime;
                   var when = event.start.dateTime;
+                  var free;
                   if (!when) {
                     when = event.start.date;
                   }
-                  console.log(event.summary + ' (' + when + ')')
+                  // console.log(prevEvent);
+                  free = when - prevEvent.end.dateTime;
+                  // console.log(event.summary + ' (' + when + ')');
+                  console.log(free);
+                  roomR2.push({name: event.summary, when: when});
                 }
               } else {
                 console.log('No upcoming events found.');
